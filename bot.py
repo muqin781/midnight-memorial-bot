@@ -390,7 +390,7 @@ async def remember(
     }
     if days in special_days:
         
-        msg = (
+        message = (
     f"🕊️ 懷念 {name}\n\n"
     "────────────\n\n"
     f"今天是第 {days} 天。\n\n"
@@ -474,7 +474,7 @@ async def answer(
 
     if question:
 
-        msg = (
+        message = (
             f"❓ {question}\n\n"
             "────────────\n\n"
             f"{answer_text}\n\n"
@@ -483,7 +483,7 @@ async def answer(
 
     else:
 
-        msg = (
+        message = (
             "────────────\n\n"
             f"{answer_text}\n\n"
             "────────────"
@@ -491,7 +491,7 @@ async def answer(
 
 
     await interaction.response.send_message(
-        msg
+        message
     )
 # ======================
 # addanswer
@@ -575,7 +575,7 @@ async def addanswer(
     count = len(book)
 
 
-    msg = (
+    message = (
 
         "📖 你輕輕闔上了書。\n\n"
 
@@ -617,11 +617,11 @@ async def addanswer(
 
     if count in milestones:
 
-        msg += "\n\n" + milestones[count]
+        message += "\n\n" + milestones[count]
 
 
     await interaction.response.send_message(
-        msg,
+        message,
         ephemeral=True
     )
 
