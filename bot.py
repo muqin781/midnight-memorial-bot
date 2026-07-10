@@ -471,7 +471,64 @@ async def answer(
     await interaction.response.send_message(
         msg
     )
+# ======================
+# addanswer
+# ======================
 
+@app_commands.command(
+    name="addanswer",
+    description="留下你的答案給未來翻閱的人"
+)
+
+@app_commands.describe(
+    answer="想留下的一句話"
+)
+
+async def addanswer(
+    interaction: discord.Interaction,
+    answer: str
+):
+
+    book = load_book(
+        interaction.guild.id
+    )
+
+
+    book.append(answer)
+
+
+    save_book(
+        interaction.guild.id,
+        book
+    )
+
+
+    messages = [
+        "📖 你輕輕闔上了書。\n\n"
+        "它會靜靜躺在書頁之中。\n\n"
+        "直到有一天，\n"
+        "被某位有緣人翻開。",
+
+        "📖 書頁已經收下這句話。\n\n"
+        "它不會消失，\n"
+        "也不會急著出現。\n\n"
+        "它會等待下一位翻閱它的人。",
+
+        "📖 這句話已被寫入書中。\n\n"
+        "沒有人知道它何時會出現。\n\n"
+        "但它終究會遇見屬於它的人。",
+
+        "📖 你留下了一頁。\n\n"
+        "未來某一天，\n"
+        "某個正在尋找答案的人，\n"
+        "會遇見它。"
+    ]
+
+
+    await interaction.response.send_message(
+        random.choice(messages),
+        ephemeral=True
+    )
 
 # ======================
 # reason
@@ -795,6 +852,7 @@ bot.tree.add_command(reason)
 bot.tree.add_command(edit)
 bot.tree.add_command(remove)
 bot.tree.add_command(answer)
+bot.tree.add_command(addanswer)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
 
