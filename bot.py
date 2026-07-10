@@ -436,6 +436,18 @@ async def answer(
     text = random.choice(
         answers
     )
+    styles = [
+    f"📖「{text}」",
+
+    f"📖 書上寫著：\n\n「{text}」",
+
+    f"📖 你翻開其中一頁。\n\n「{text}」",
+
+    f"📖 泛黃的紙頁上寫著：\n\n「{text}」"
+    ]
+
+
+    answer_text = random.choice(styles)
 
 
     if question:
@@ -443,7 +455,7 @@ async def answer(
         msg = (
             f"❓ {question}\n\n"
             "────────────\n\n"
-            f"📖「{text}」\n\n"
+            f"{answer_text}\n\n"
             "────────────"
         )
 
@@ -451,7 +463,7 @@ async def answer(
 
         msg = (
             "────────────\n\n"
-            f"📖「{text}」\n\n"
+            f"{answer_text}\n\n"
             "────────────"
         )
 
