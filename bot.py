@@ -43,9 +43,12 @@ def load_data(guild_id):
 
 def save_data(guild_id, data):
 
-    file = get_file(guild_id)
+    with open(
+        get_file(guild_id),
+        "w",
+        encoding="utf-8"
+    ) as f:
 
-    with open(file, "w", encoding="utf-8") as f:
         json.dump(
             data,
             f,
@@ -54,8 +57,58 @@ def save_data(guild_id, data):
         )
 
 
+def parse_date(date_text):
+
+    formats = [
+        "%Y-%m-%d",
+        "%Y/%m/%d"
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.strptime(
+                date_text,
+                fmt
+            )
+        except:
+            pass
+
+    return None
+
+
 # ======================
-# Bot 啟動
+# 自動完成名字
+# ======================
+
+async def name_autocomplete(
+    interaction: discord.Interaction,
+    current: str
+):
+
+    data = load_data(
+        interaction.guild.id
+    )
+
+    names = list(data.keys())
+
+    result = []
+
+    for name in names:
+
+        if current.lower() in name.lower():
+
+            result.append(
+                app_commands.Choice(
+                    name=name,
+                    value=name
+                )
+            )
+
+    return result[:25]
+
+
+# ======================
+# 啟動
 # ======================
 
 @bot.event
@@ -69,17 +122,17 @@ async def on_ready():
 
 
 # ======================
-# 新增紀念人物
+# goodbye
 # ======================
 
 @app_commands.command(
     name="goodbye",
-    description="新增離開紀念人物"
+    description="新增紀念人物"
 )
 @app_commands.describe(
     name="名字",
-    date="離開日期 YYYY-MM-DD",
-    reason="原因（可選）"
+    date="日期 YYYY-MM-DD 或 YYYY/M/D",
+    reason="原因"
 )
 async def goodbye(
     interaction: discord.Interaction,
@@ -92,12 +145,10 @@ async def goodbye(
 
     data = load_data(guild_id)
 
-
     data[name] = {
         "date": date,
         "reason": reason
     }
-
 
     save_data(
         guild_id,
@@ -113,7 +164,7 @@ async def goodbye(
 
 
 # ======================
-# 懷念
+# remember
 # ======================
 
 @app_commands.command(
@@ -121,16 +172,19 @@ async def goodbye(
     description="查看懷念第幾天"
 )
 @app_commands.describe(
-    name="名字"
+    name="選擇名字"
+)
+@app_commands.autocomplete(
+    name=name_autocomplete
 )
 async def remember(
     interaction: discord.Interaction,
     name: str
 ):
 
-    guild_id = interaction.guild.id
-
-    data = load_data(guild_id)
+    data = load_data(
+        interaction.guild.id
+    )
 
 
     if name not in data:
@@ -142,17 +196,24 @@ async def remember(
         return
 
 
-    leave_date = datetime.strptime(
-        data[name]["date"],
-        "%Y-%m-%d"
+    leave_date = parse_date(
+        data[name]["date"]
     )
 
 
-    today = datetime.today()
+    if leave_date is None:
+
+        await interaction.response.send_message(
+            "日期格式錯誤"
+        )
+
+        return
 
 
     days = (
-        today - leave_date
+        datetime.today()
+        -
+        leave_date
     ).days
 
 
@@ -162,51 +223,51 @@ async def remember(
 
 
 # ======================
-# 查看原因
+# reason
 # ======================
 
 @app_commands.command(
     name="reason",
-    description="查看離開原因"
+    description="查看原因"
 )
-@app_commands.describe(
-    name="名字"
+@app_commands.autocomplete(
+    name=name_autocomplete
 )
 async def reason(
     interaction: discord.Interaction,
     name: str
 ):
 
-    guild_id = interaction.guild.id
-
-    data = load_data(guild_id)
+    data = load_data(
+        interaction.guild.id
+    )
 
 
     if name not in data:
 
         await interaction.response.send_message(
-            "找不到這位成員"
+            "找不到"
         )
 
         return
 
 
-    r = data[name].get(
+    reason = data[name].get(
         "reason"
     )
 
 
-    if not r:
-        r = "沒有留下原因"
+    if not reason:
+        reason = "沒有留下原因"
 
 
     await interaction.response.send_message(
-        f"📝 {name}\n原因：{r}"
+        f"📝 {name}\n{reason}"
     )
 
 
 # ======================
-# 名單
+# list
 # ======================
 
 @app_commands.command(
@@ -217,9 +278,9 @@ async def list_people(
     interaction: discord.Interaction
 ):
 
-    guild_id = interaction.guild.id
-
-    data = load_data(guild_id)
+    data = load_data(
+        interaction.guild.id
+    )
 
 
     if not data:
@@ -233,7 +294,6 @@ async def list_people(
 
     text = "📜 紀念名單\n\n"
 
-
     for name in data:
 
         text += f"🕊️ {name}\n"
@@ -245,56 +305,52 @@ async def list_people(
 
 
 # ======================
-# 排行榜
+# ranking
 # ======================
 
 @app_commands.command(
     name="ranking",
-    description="查看紀念排行榜"
+    description="紀念排行榜"
 )
 async def ranking(
     interaction: discord.Interaction
 ):
 
-    guild_id = interaction.guild.id
+    data = load_data(
+        interaction.guild.id
+    )
 
-    data = load_data(guild_id)
-
-
-    today = datetime.today()
-
-
-    ranking = []
-
+    result = []
 
     for name, info in data.items():
 
-        date = datetime.strptime(
-            info["date"],
-            "%Y-%m-%d"
+        date = parse_date(
+            info["date"]
         )
 
-        days = (
-            today-date
-        ).days
+        if date:
+
+            days = (
+                datetime.today()
+                -
+                date
+            ).days
+
+            result.append(
+                (name, days)
+            )
 
 
-        ranking.append(
-            (name, days)
-        )
-
-
-    ranking.sort(
+    result.sort(
         key=lambda x:x[1],
         reverse=True
     )
 
 
-    msg = "🏆 紀念排行榜\n\n"
-
+    msg = "🏆 排行榜\n\n"
 
     for i, item in enumerate(
-        ranking[:10],
+        result[:10],
         1
     ):
 
@@ -315,7 +371,7 @@ async def ranking(
 
 @app_commands.command(
     name="help",
-    description="查看使用方法"
+    description="使用說明"
 )
 async def help_command(
     interaction: discord.Interaction
