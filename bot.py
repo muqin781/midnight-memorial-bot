@@ -149,7 +149,7 @@ def parse_date(date_text):
     for fmt in formats:
 
         try:
-            return datetime.strptime(
+            return datetime.datetime.strptime(
                 date_text,
                 fmt
             )
@@ -447,19 +447,6 @@ async def answer(
         page["text"]
         for page in book_answers
     ]
-    
-def load_default_answers():
-
-    if not os.path.exists("default_answers.json"):
-        return []
-
-    with open(
-        "default_answers.json",
-        "r",
-        encoding="utf-8"
-    ) as f:
-
-        return json.load(f)
 
 
     text = random.choice(
