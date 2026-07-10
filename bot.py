@@ -407,7 +407,64 @@ async def reason(
 
     )
 
+# ======================
+# edit
+# ======================
 
+@app_commands.command(
+    name="edit",
+    description="編輯紀念人物資料"
+)
+
+@app_commands.describe(
+    name="選擇名字",
+    date="新的日期 YYYY/MM/DD",
+    reason="新的原因"
+)
+
+@app_commands.autocomplete(
+    name=name_autocomplete
+)
+
+async def edit(
+    interaction: discord.Interaction,
+    name: str,
+    date: str,
+    reason: str = None
+):
+
+    data = load_data(
+        interaction.guild.id
+    )
+
+
+    if name not in data:
+
+        await interaction.response.send_message(
+            "❌ 找不到這位紀念人物",
+            ephemeral=True
+        )
+
+        return
+
+
+    data[name]["date"] = date
+    data[name]["reason"] = reason
+
+
+    save_data(
+        interaction.guild.id,
+        data
+    )
+
+
+    await interaction.response.send_message(
+        f"✏️ 已更新\n\n"
+        f"🕊️ {name}\n\n"
+        f"離開日期：{date}\n"
+        f"原因：{reason or '無'}",
+        ephemeral=True
+    )
 
 # ======================
 # list
@@ -446,6 +503,57 @@ async def list_people(
 
     await interaction.response.send_message(
         text
+    )
+# ======================
+# remove
+# ======================
+
+@app_commands.command(
+    name="remove",
+    description="刪除紀念人物"
+)
+
+@app_commands.describe(
+    name="選擇名字"
+)
+
+@app_commands.autocomplete(
+    name=name_autocomplete
+)
+
+async def remove(
+    interaction: discord.Interaction,
+    name: str
+):
+
+    data = load_data(
+        interaction.guild.id
+    )
+
+
+    if name not in data:
+
+        await interaction.response.send_message(
+            "❌ 找不到這位紀念人物",
+            ephemeral=True
+        )
+
+        return
+
+
+    del data[name]
+
+
+    save_data(
+        interaction.guild.id,
+        data
+    )
+
+
+    await interaction.response.send_message(
+        f"🗑️ 已刪除\n\n"
+        f"🕊️ {name}",
+        ephemeral=True
     )
 
 
@@ -563,17 +671,12 @@ async def help_command(
 # ======================
 
 bot.tree.add_command(goodbye)
-
 bot.tree.add_command(remember)
-
 bot.tree.add_command(reason)
-
+bot.tree.add_command(edit)
+bot.tree.add_command(remove)
 bot.tree.add_command(list_people)
-
-bot.tree.add_command(ranking)
-
 bot.tree.add_command(help_command)
-
 
 
 # ======================
