@@ -163,57 +163,58 @@ async def goodbye(
     reason: str = None
 ):
 
-    guild_id = interaction.guild.id
+    data = load_data(interaction.guild.id)
 
-  data = load_data(interaction.guild.id)
+    original_name = name
 
-original_name = name
 
-if name in data:
+    if name in data:
 
-    number = 2
+        if f"{name} ②" not in data:
+            name = f"{name} ②"
 
-    while f"{original_name} ②" in data:
-        number += 1
+        elif f"{name} ③" not in data:
+            name = f"{name} ③"
 
-    if number == 2:
-        name = f"{original_name} ②"
-    elif number == 3:
-        name = f"{original_name} ③"
-    elif number == 4:
-        name = f"{original_name} ④"
-    elif number == 5:
-        name = f"{original_name} ⑤"
+        elif f"{name} ④" not in data:
+            name = f"{name} ④"
+
+        else:
+            number = 5
+
+            while f"{original_name} {number}" in data:
+                number += 1
+
+            name = f"{original_name} {number}"
+
+
+    data[name] = {
+        "date": date,
+        "reason": reason
+    }
+
+
+    save_data(
+        interaction.guild.id,
+        data
+    )
+
+
+    if name != original_name:
+
+        await interaction.response.send_message(
+            f"⚠️ 已有一位叫「{original_name}」的紀念人物。\n\n"
+            f"已自動新增為：🕊️ {name}\n"
+            f"離開日期：{date}"
+        )
+
     else:
-        name = f"{original_name} {number}"
 
-
-data[name] = {
-    "date": date,
-    "reason": reason
-}
-
-
-save_data(
-    interaction.guild.id,
-    data
-)
-
-if name != original_name:
-
-    await interaction.response.send_message(
-        f"⚠️ 已有一位叫「{original_name}」的紀念人物。\n\n"
-        f"已自動新增為：🕊️ {name}\n\n"
-        f"離開日期：{date}"
-    )
-
-else:
-
-    await interaction.response.send_message(
-        f"✅ 已記錄\n\n"
-        f"🕊️ {name}\n"
-        f"離開日期：{date}"
-    )
+        await interaction.response.send_message(
+            f"✅ 已記錄\n\n"
+            f"🕊️ {name}\n"
+            f"離開日期：{date}"
+        )
 
 
 
