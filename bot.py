@@ -165,31 +165,54 @@ async def goodbye(
 
     guild_id = interaction.guild.id
 
-    data = load_data(
-        guild_id
-    )
+  data = load_data(interaction.guild.id)
+
+original_name = name
+
+if name in data:
+
+    number = 2
+
+    while f"{original_name} ②" in data:
+        number += 1
+
+    if number == 2:
+        name = f"{original_name} ②"
+    elif number == 3:
+        name = f"{original_name} ③"
+    elif number == 4:
+        name = f"{original_name} ④"
+    elif number == 5:
+        name = f"{original_name} ⑤"
+    else:
+        name = f"{original_name} {number}"
 
 
-    data[name] = {
-
-        "date": date,
-
-        "reason": reason
-    }
+data[name] = {
+    "date": date,
+    "reason": reason
+}
 
 
-    save_data(
-        guild_id,
-        data
-    )
+save_data(
+    interaction.guild.id,
+    data
+)
 
+if name != original_name:
 
     await interaction.response.send_message(
+        f"⚠️ 已有一位叫「{original_name}」的紀念人物。\n\n"
+        f"已自動新增為：🕊️ {name}\n\n"
+        f"離開日期：{date}"
+    )
 
+else:
+
+    await interaction.response.send_message(
         f"✅ 已記錄\n\n"
         f"🕊️ {name}\n"
         f"離開日期：{date}"
-
     )
 
 
