@@ -327,7 +327,7 @@ async def remember(
     f"🕊️ 懷念 {name}\n\n"
     "────────────\n\n"
     f"今天是第 {days} 天。\n\n"
-    f"{special[days]}\n\n"
+    f"{special_days[days]}\n\n"
     "────────────"
         )
 
