@@ -411,7 +411,54 @@ async def remember(
     await interaction.response.send_message(
         message
     )
+# ======================
+# answer
+# ======================
 
+@app_commands.command(
+    name="answer",
+    description="翻開解答之書"
+)
+
+@app_commands.describe(
+    question="想問書本的問題（可留空）"
+)
+
+async def answer(
+    interaction: discord.Interaction,
+    question: str = None
+):
+
+    answers = load_book(
+        interaction.guild.id
+    )
+
+    text = random.choice(
+        answers
+    )
+
+
+    if question:
+
+        msg = (
+            f"❓ {question}\n\n"
+            "────────────\n\n"
+            f"📖「{text}」\n\n"
+            "────────────"
+        )
+
+    else:
+
+        msg = (
+            "────────────\n\n"
+            f"📖「{text}」\n\n"
+            "────────────"
+        )
+
+
+    await interaction.response.send_message(
+        msg
+    )
 
 
 # ======================
@@ -735,6 +782,7 @@ bot.tree.add_command(remember)
 bot.tree.add_command(reason)
 bot.tree.add_command(edit)
 bot.tree.add_command(remove)
+bot.tree.add_command(answer)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
 
