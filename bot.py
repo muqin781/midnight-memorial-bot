@@ -3,12 +3,72 @@ from discord.ext import commands
 from discord import app_commands
 import json
 import os
+import random
 from datetime import datetime
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 DATA_FOLDER = "data"
+BOOK_FOLDER = "data/books"
+
+
+if not os.path.exists(BOOK_FOLDER):
+    os.makedirs(BOOK_FOLDER)
+
+
+
+def save_book(guild_id, answers):
+
+    path = f"{BOOK_FOLDER}/{guild_id}.json"
+
+    with open(
+        path,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            answers,
+            f,
+            ensure_ascii=False,
+            indent=4
+        )
+
+
+
+def load_book(guild_id):
+
+    path = f"{BOOK_FOLDER}/{guild_id}.json"
+
+
+    if not os.path.exists(path):
+
+        with open(
+            "default_answers.json",
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            answers = json.load(f)
+
+
+        save_book(
+            guild_id,
+            answers
+        )
+
+
+        return answers
+
+
+    with open(
+        path,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        return json.load(f)
 
 
 if not os.path.exists(DATA_FOLDER):
