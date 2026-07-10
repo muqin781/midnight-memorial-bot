@@ -447,7 +447,13 @@ async def answer(
         page["text"]
         for page in book_answers
     ]
+    if not all_answers:
 
+        await interaction.response.send_message(
+            "📖 書頁目前還是空白的。"
+        )
+
+        return
 
     text = random.choice(
         all_answers
@@ -505,6 +511,8 @@ async def addanswer(
     answer: str
 ):
 
+    answer = answer.strip()
+    
     book = load_book(
         interaction.guild.id
     )
