@@ -10,8 +10,8 @@ import datetime
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 
-DATA_FOLDER = "data"
-BOOK_FOLDER = "data/books"
+DATA_FOLDER = "/app/data"
+BOOK_FOLDER = "/app/data/books"
 
 
 if not os.path.exists(DATA_FOLDER):
