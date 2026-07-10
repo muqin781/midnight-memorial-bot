@@ -338,7 +338,7 @@ async def remember(
 
 
     days = (
-        datetime.today()
+        datetime.datetime.today()
         -
         leave_date
     ).days
@@ -447,6 +447,19 @@ async def answer(
         page["text"]
         for page in book_answers
     ]
+    
+def load_default_answers():
+
+    if not os.path.exists("default_answers.json"):
+        return []
+
+    with open(
+        "default_answers.json",
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        return json.load(f)
 
 
     text = random.choice(
@@ -852,7 +865,7 @@ async def ranking(
         if date:
 
             days = (
-                datetime.today()
+                datetime.datetime.today()
                 -
                 date
             ).days
@@ -921,9 +934,19 @@ async def help_command(
 
 /reason 查看原因
 
+/edit 編輯紀念人物
+
+/remove 刪除紀念人物
+
 /list 查看名單
 
 /ranking 排行榜
+
+📖 解答之書
+
+/answer 翻開書本尋找答案
+
+/addanswer 留下一句答案
 """
     )
 
