@@ -4,13 +4,18 @@ from discord import app_commands
 import json
 import os
 import random
-from datetime import datetime
+import datetime
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+
 DATA_FOLDER = "data"
 BOOK_FOLDER = "data/books"
+
+
+if not os.path.exists(DATA_FOLDER):
+    os.makedirs(DATA_FOLDER)
 
 
 if not os.path.exists(BOOK_FOLDER):
@@ -18,9 +23,14 @@ if not os.path.exists(BOOK_FOLDER):
 
 
 
-def save_book(guild_id, answers):
+# ======================
+# 解答之書資料
+# ======================
+
+def save_book(guild_id, book):
 
     path = f"{BOOK_FOLDER}/{guild_id}.json"
+
 
     with open(
         path,
@@ -29,7 +39,7 @@ def save_book(guild_id, answers):
     ) as f:
 
         json.dump(
-            answers,
+            book,
             f,
             ensure_ascii=False,
             indent=4
@@ -42,24 +52,12 @@ def load_book(guild_id):
     path = f"{BOOK_FOLDER}/{guild_id}.json"
 
 
+    # 每個伺服器第一次都是空書
+    # 不包含 default_answers
+
     if not os.path.exists(path):
 
-        with open(
-            "default_answers.json",
-            "r",
-            encoding="utf-8"
-        ) as f:
-
-            answers = json.load(f)
-
-
-        save_book(
-            guild_id,
-            answers
-        )
-
-
-        return answers
+        return []
 
 
     with open(
@@ -71,17 +69,26 @@ def load_book(guild_id):
         return json.load(f)
 
 
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
+
+def load_default_answers():
+
+    with open(
+        "default_answers.json",
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        return json.load(f)
+
 
 
 intents = discord.Intents.default()
+
 
 bot = commands.Bot(
     command_prefix="!",
     intents=intents
 )
-
 
 # ======================
 # 資料管理
@@ -429,12 +436,21 @@ async def answer(
     question: str = None
 ):
 
-    answers = load_book(
-        interaction.guild.id
+    default_answers = load_default_answers()
+
+    book_answers = load_book(
+    interaction.guild.id
     )
 
+
+    all_answers = default_answers + [
+        page["text"]
+        for page in book_answers
+    ]
+
+
     text = random.choice(
-        answers
+        all_answers
     )
     styles = [
     f"📖「{text}」",
@@ -481,7 +497,7 @@ async def answer(
 )
 
 @app_commands.describe(
-    answer="想留下的一句話"
+    answer="想留下的一句話（2～100字）"
 )
 
 async def addanswer(
@@ -494,7 +510,52 @@ async def addanswer(
     )
 
 
-    book.append(answer)
+    if len(answer) < 2:
+
+        await interaction.response.send_message(
+            "📖 這一頁太短了。\n\n至少留下 2 個字。",
+            ephemeral=True
+        )
+
+        return
+
+
+    if len(answer) > 100:
+
+        await interaction.response.send_message(
+            "📖 這一頁太長了。\n\n最多只能留下100個字。",
+            ephemeral=True
+        )
+
+        return
+
+
+
+    for page in book:
+
+        if page["text"] == answer:
+
+            await interaction.response.send_message(
+                "📖 這句話已經存在於書中了。",
+                ephemeral=True
+            )
+
+            return
+
+
+
+    new_page = {
+
+        "text": answer,
+
+        "author": str(interaction.user.id),
+
+        "time": str(datetime.datetime.now())
+
+    }
+
+
+    book.append(new_page)
 
 
     save_book(
@@ -503,30 +564,56 @@ async def addanswer(
     )
 
 
-    messages = [
+    count = len(book)
+
+
+    msg = (
+
         "📖 你輕輕闔上了書。\n\n"
+
         "它會靜靜躺在書頁之中。\n\n"
+
         "直到有一天，\n"
-        "被某位有緣人翻開。",
 
-        "📖 書頁已經收下這句話。\n\n"
-        "它不會消失，\n"
-        "也不會急著出現。\n\n"
-        "它會等待下一位翻閱它的人。",
+        "被某位有緣人翻開。\n\n"
 
-        "📖 這句話已被寫入書中。\n\n"
-        "沒有人知道它何時會出現。\n\n"
-        "但它終究會遇見屬於它的人。",
+        "────────────\n\n"
 
-        "📖 你留下了一頁。\n\n"
-        "未來某一天，\n"
-        "某個正在尋找答案的人，\n"
-        "會遇見它。"
-    ]
+        f"這是本書的第 {count} 頁。"
+
+    )
+
+
+    milestones = {
+
+        50:
+        "📖 這本書已經留下50頁。\n它開始記錄屬於這裡的故事。",
+
+        100:
+        "📖 書頁累積到了100頁。\n它慢慢有了自己的記憶。",
+
+        200:
+        "📖 這本書開始收藏更多人的心意。",
+
+        300:
+        "📖 越來越多故事被寫進其中。",
+
+        400:
+        "📖 這本書已經陪伴許多人留下答案。",
+
+        500:
+        "📖 500頁已完成。\n沒有人知道下一頁會寫下什麼。"
+
+    }
+
+
+    if count in milestones:
+
+        msg += "\n\n" + milestones[count]
 
 
     await interaction.response.send_message(
-        random.choice(messages),
+        msg,
         ephemeral=True
     )
 
