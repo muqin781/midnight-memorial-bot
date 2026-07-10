@@ -72,13 +72,20 @@ def load_book(guild_id):
 
 def load_default_answers():
 
-    with open(
-        "default_answers.json",
-        "r",
-        encoding="utf-8"
-    ) as f:
+    if not os.path.exists("default_answers.json"):
+        return []
 
-        return json.load(f)
+    try:
+        with open(
+            "default_answers.json",
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            return json.load(f)
+
+    except:
+        return []
 
 
 
@@ -342,6 +349,12 @@ async def remember(
         -
         leave_date
     ).days
+    
+if days < 0:
+    await interaction.response.send_message(
+        "🕊️ 這個日期還沒有到喔。"
+    )
+    return
 
 
     special_days = {
@@ -958,6 +971,7 @@ bot.tree.add_command(reason)
 bot.tree.add_command(edit)
 bot.tree.add_command(remove)
 bot.tree.add_command(answer)
+bot.tree.add_command(ranking)
 bot.tree.add_command(addanswer)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
