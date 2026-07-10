@@ -322,12 +322,13 @@ async def remember(
 
     }
     if days in special_days:
-
-        message = (
-            f"🕊️ 懷念 {name}\n\n"
-            "────────────\n\n"
-            f"今天是第 {days} 天。\n\n"
-            f"{special_days[days]}"
+        
+        msg = (
+    f"🕊️ 懷念 {name}\n\n"
+    "────────────\n\n"
+    f"今天是第 {days} 天。\n\n"
+    f"{special[days]}\n\n"
+    "────────────"
         )
 
 
