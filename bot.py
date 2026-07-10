@@ -297,7 +297,7 @@ async def remember(
         "500天，這份記憶已經成為重要的一頁。"
 
     }
-        if days in special_days:
+    if days in special_days:
 
         message = (
             f"🕊️ 懷念 {name}\n\n"
