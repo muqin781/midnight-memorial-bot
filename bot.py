@@ -349,13 +349,15 @@ async def remember(
         -
         leave_date
     ).days
-    
-if days < 0:
-    await interaction.response.send_message(
-        "🕊️ 這個日期還沒有到喔。"
-    )
-    return
 
+
+    if days < 0:
+
+        await interaction.response.send_message(
+            "🕊️ 這個日期還沒有到喔。"
+        )
+
+        return
 
     special_days = {
 
