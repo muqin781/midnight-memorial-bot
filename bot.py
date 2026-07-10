@@ -930,7 +930,7 @@ async def help_command(
 
 /goodbye 新增紀念人物
 
-/remember 查看第幾天
+/remember 查看懷念第幾天
 
 /reason 查看原因
 
@@ -940,7 +940,8 @@ async def help_command(
 
 /list 查看名單
 
-/ranking 排行榜
+/ranking 紀念排行榜
+
 
 📖 解答之書
 
