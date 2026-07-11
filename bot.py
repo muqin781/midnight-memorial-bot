@@ -1190,6 +1190,9 @@ async def help_command(
 
 /addbosmin 新增博士敏語錄
 
+/listbosmin 查看博士敏語錄清單
+
+/removebosmin依編號刪除博士敏語錄
 
 📖 解答之書
 
@@ -1214,6 +1217,8 @@ bot.tree.add_command(answer)
 bot.tree.add_command(ranking)
 bot.tree.add_command(addanswer)
 bot.tree.add_command(addbosmin)
+bot.tree.add_command(listbosmin)
+bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
 
