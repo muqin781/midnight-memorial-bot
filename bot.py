@@ -803,6 +803,7 @@ async def list_people(
 
 @app_commands.autocomplete(
     name=name_autocomplete
+)
 
 async def remove(
     interaction: discord.Interaction,
