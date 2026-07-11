@@ -653,6 +653,100 @@ async def addbosmin(
         f"目前共有 {len(quotes)} 句。",
         ephemeral=True
     )
+
+# ======================
+# listbosmin
+# ======================
+
+@app_commands.command(
+    name="listbosmin",
+    description="查看博士敏語錄清單"
+)
+
+async def listbosmin(
+    interaction: discord.Interaction
+):
+
+    quotes = load_bosmin(
+        interaction.guild.id
+    )
+
+    if not quotes:
+
+        await interaction.response.send_message(
+            "目前沒有博士敏語錄。",
+            ephemeral=True
+        )
+        return
+
+    lines = []
+
+    for number, quote in enumerate(quotes, start=1):
+        lines.append(
+            f"{number}. {quote}"
+        )
+
+    message = (
+        "📜 博士敏語錄\n\n"
+        + "\n".join(lines)
+    )
+
+    # 避免超過 Discord 訊息長度限制
+    if len(message) > 1900:
+        message = message[:1900] + "\n……清單過長，後面暫時省略。"
+
+    await interaction.response.send_message(
+        message,
+        ephemeral=True
+    )
+
+
+# ======================
+# removebosmin
+# ======================
+
+@app_commands.command(
+    name="removebosmin",
+    description="依編號刪除博士敏語錄"
+)
+
+@app_commands.describe(
+    number="請先使用 /listbosmin 查看語錄編號"
+)
+
+async def removebosmin(
+    interaction: discord.Interaction,
+    number: int
+):
+
+    quotes = load_bosmin(
+        interaction.guild.id
+    )
+
+    if number < 1 or number > len(quotes):
+
+        await interaction.response.send_message(
+            "❌ 找不到這個編號。\n\n"
+            "請先使用 `/listbosmin` 查看語錄清單。",
+            ephemeral=True
+        )
+        return
+
+    removed_quote = quotes.pop(
+        number - 1
+    )
+
+    save_bosmin(
+        interaction.guild.id,
+        quotes
+    )
+
+    await interaction.response.send_message(
+        f"🗑️ 已刪除博士敏語錄：\n\n"
+        f"「{removed_quote}」\n\n"
+        f"目前剩下 {len(quotes)} 句。",
+        ephemeral=True
+    )
 # ======================
 # addanswer
 # ======================
