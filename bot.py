@@ -90,6 +90,7 @@ def load_default_answers():
 
 
 intents = discord.Intents.default()
+intents.message_content = True
 
 
 bot = commands.Bot(
@@ -653,9 +654,6 @@ async def addanswer(
     name="選擇名字"
 )
 
-@app_commands.autocomplete(
-    name=name_autocomplete
-)
 
 async def reason(
     interaction: discord.Interaction,
@@ -805,7 +803,6 @@ async def list_people(
 
 @app_commands.autocomplete(
     name=name_autocomplete
-)
 
 async def remove(
     interaction: discord.Interaction,
