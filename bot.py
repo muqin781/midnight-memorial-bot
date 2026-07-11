@@ -5,6 +5,7 @@ import json
 import os
 import random
 import datetime
+import time
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -12,6 +13,16 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 DATA_FOLDER = "/app/data"
 BOOK_FOLDER = "/app/data/books"
+BOSMIN_FOLDER = "/app/data/bosmin"
+
+os.makedirs(BOSMIN_FOLDER, exist_ok=True)
+
+DEFAULT_BOSMIN_QUOTES = [
+    "好累喔。",
+    "💩"
+]
+
+bosmin_last_reply = {}
 
 
 if not os.path.exists(DATA_FOLDER):
@@ -139,7 +150,42 @@ def save_data(guild_id, data):
             ensure_ascii=False,
             indent=4
         )
+# ======================
+# 博士敏語錄
+# ======================
 
+def get_bosmin_file(guild_id):
+
+    return f"{BOSMIN_FOLDER}/{guild_id}.json"
+
+
+def load_bosmin(guild_id):
+
+    path = get_bosmin_file(guild_id)
+
+    if not os.path.exists(path):
+
+        return DEFAULT_BOSMIN_QUOTES.copy()
+
+    with open(path, "r", encoding="utf-8") as f:
+
+        return json.load(f)
+
+
+def save_bosmin(guild_id, quotes):
+
+    with open(
+        get_bosmin_file(guild_id),
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            quotes,
+            f,
+            ensure_ascii=False,
+            indent=4
+        )
 
 
 # ======================
@@ -213,6 +259,37 @@ async def on_ready():
     print(
         f"登入成功：{bot.user}"
     )
+@bot.event
+async def on_message(message):
+
+    if message.author.bot:
+        return
+
+    if message.guild is None:
+        return
+
+    text = message.content.lower()
+
+    if "博士敏" in text or "bosmin" in text:
+
+        now = time.time()
+
+        guild_id = message.guild.id
+
+        last = bosmin_last_reply.get(guild_id, 0)
+
+        if now - last >= 8:
+
+            bosmin_last_reply[guild_id] = now
+
+            quotes = load_bosmin(guild_id)
+
+            await message.reply(
+                random.choice(quotes),
+                mention_author=False
+            )
+
+    await bot.process_commands(message)
 
 
 
@@ -508,6 +585,70 @@ async def answer(
 
     await interaction.response.send_message(
         message
+    )
+# ======================
+# addbosmin
+# ======================
+
+@app_commands.command(
+    name="addbosmin",
+    description="新增博士敏語錄"
+)
+
+@app_commands.describe(
+    quote="博士敏常說的一句話"
+)
+
+async def addbosmin(
+    interaction: discord.Interaction,
+    quote: str
+):
+
+    quote = quote.strip()
+
+    if len(quote) < 1:
+
+        await interaction.response.send_message(
+            "❌ 語錄不能是空白。",
+            ephemeral=True
+        )
+
+        return
+
+    if len(quote) > 100:
+
+        await interaction.response.send_message(
+            "❌ 語錄最多100個字。",
+            ephemeral=True
+        )
+
+        return
+
+    quotes = load_bosmin(
+        interaction.guild.id
+    )
+
+    if quote in quotes:
+
+        await interaction.response.send_message(
+            "這句語錄已經存在。",
+            ephemeral=True
+        )
+
+        return
+
+    quotes.append(quote)
+
+    save_bosmin(
+        interaction.guild.id,
+        quotes
+    )
+
+    await interaction.response.send_message(
+        f"✅ 已新增博士敏語錄：\n\n"
+        f"「{quote}」\n\n"
+        f"目前共有 {len(quotes)} 句。",
+        ephemeral=True
     )
 # ======================
 # addanswer
@@ -950,6 +1091,8 @@ async def help_command(
 
 /ranking 紀念排行榜
 
+/addbosmin 新增博士敏語錄
+
 
 📖 解答之書
 
@@ -973,6 +1116,7 @@ bot.tree.add_command(remove)
 bot.tree.add_command(answer)
 bot.tree.add_command(ranking)
 bot.tree.add_command(addanswer)
+bot.tree.add_command(addbosmin)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
 
