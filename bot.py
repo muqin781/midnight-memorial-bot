@@ -223,7 +223,10 @@ async def name_autocomplete(
     interaction: discord.Interaction,
     current: str
 ):
-
+    
+    if len(current.strip()) < 2:
+        return []
+        
     data = load_data(
         interaction.guild.id
     )
@@ -278,7 +281,7 @@ async def on_message(message):
 
         last = bosmin_last_reply.get(guild_id, 0)
 
-        if now - last >= 8:
+        if now - last >= 3:
 
             bosmin_last_reply[guild_id] = now
 
