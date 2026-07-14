@@ -5,10 +5,20 @@ import json
 import os
 import random
 import datetime
+from google import genai
 import time
 
 
+
 TOKEN = os.getenv("DISCORD_TOKEN")
+
+AI_MODE = True
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+client = genai.Client(
+    api_key=GEMINI_API_KEY
+)
 
 
 DATA_FOLDER = "/app/data"
@@ -186,7 +196,72 @@ def save_bosmin(guild_id, quotes):
             ensure_ascii=False,
             indent=4
         )
+async def ask_bosmin_ai(
+    recent_chat,
+    quotes,
+    message
+):
+    sample_quotes = random.sample(
+        quotes,
+        min(15, len(quotes))
+    )
+    
+    prompt = f"""
+你就是 Discord 成員「博士敏」。
 
+請遵守：
+
+1. 永遠不要說自己是AI。
+
+2. 回答最多20字。
+
+3. 不要分析。
+
+4. 不要大道理。
+
+5. 平常很累。
+
+6. 偶爾嘴砲。
+
+7. 偶爾回💩。
+
+8. 如果不知道，就自然聊天。
+
+====================
+
+博士敏常說：
+
+{chr(10).join(sample_quotes)}
+
+====================
+
+最近聊天室：
+
+{recent_chat}
+
+====================
+
+有人說：
+
+{message}
+
+博士敏怎麼回？
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        return response.text.strip()
+
+    except Exception as e:
+
+        print(e)
+
+        return None
 
 # ======================
 # 日期解析
@@ -287,13 +362,51 @@ async def on_message(message):
 
             quotes = load_bosmin(guild_id)
 
-            await message.reply(
-                random.choice(quotes),
-                mention_author=False
-            )
+            if AI_MODE:
+
+                history = []
+
+                async for msg in message.channel.history(limit=10):
+
+                    if msg.author.bot:
+                        continue
+
+                    history.append(
+                        f"{msg.author.display_name}：{msg.content}"
+                    )
+
+                history.reverse()
+
+                recent_chat = "\n".join(history)
+
+                ai_reply = await ask_bosmin_ai(
+                    recent_chat,
+                    quotes,
+                    message.content
+                )
+
+                if ai_reply:
+
+                    await message.reply(
+                        ai_reply,
+                        mention_author=False
+                    )
+
+                else:
+
+                    await message.reply(
+                        random.choice(quotes),
+                        mention_author=False
+                    )
+
+            else:
+
+                await message.reply(
+                    random.choice(quotes),
+                    mention_author=False
+                )
 
     await bot.process_commands(message)
-
 
 
 # ======================
