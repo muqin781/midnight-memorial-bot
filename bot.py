@@ -207,12 +207,15 @@ async def ask_bosmin_ai(
     message
 ):
     if client is None:
-    return None
+        return None
     
-    sample_quotes = random.sample(
-        quotes,
-        min(15, len(quotes))
-    )
+    if quotes:
+        sample_quotes = random.sample(
+            quotes,
+            min(15, len(quotes))
+        )
+    else:
+        sample_quotes = []
     
     prompt = f"""
 你就是 Discord 成員「博士敏」。
