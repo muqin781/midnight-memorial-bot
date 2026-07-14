@@ -266,11 +266,14 @@ async def ask_bosmin_ai(
             contents=prompt
         )
 
+        print("🤖 Gemini 已回覆")
+
+
         return response.text.strip()
 
     except Exception as e:
 
-        print(e)
+        print("❌ Gemini 回覆失敗：", e)
 
         return None
 
