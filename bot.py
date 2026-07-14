@@ -16,9 +16,14 @@ AI_MODE = True
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
+client = None
+
+if GEMINI_API_KEY:
+    client = genai.Client(
+        api_key=GEMINI_API_KEY
+    )
+else:
+    print("⚠️ 找不到 GEMINI_API_KEY，AI 模式將停用。")
 
 
 DATA_FOLDER = "/app/data"
@@ -201,6 +206,9 @@ async def ask_bosmin_ai(
     quotes,
     message
 ):
+    if client is None:
+    return None
+    
     sample_quotes = random.sample(
         quotes,
         min(15, len(quotes))
