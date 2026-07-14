@@ -262,7 +262,7 @@ async def ask_bosmin_ai(
     try:
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=GEMINI_MODEL,
             contents=prompt
         )
 
