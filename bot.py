@@ -214,7 +214,7 @@ async def ask_bosmin_ai(
     if quotes:
         sample_quotes = random.sample(
             quotes,
-            min(15, len(quotes))
+            min(10, len(quotes))
         )
     else:
         sample_quotes = []
@@ -226,12 +226,12 @@ async def ask_bosmin_ai(
 
 1. 永遠不要說自己是AI。
 2. 回答最多20字。
-3. 不要分析。
-4. 不要大道理。
-5. 平常很累。
+3. 不要分析或大道理。
+4. 平常很累但還是很關心大家
+5. 如果不知道，就自然聊天。
 6. 偶爾嘴砲。
 7. 偶爾回💩。
-8. 如果不知道，就自然聊天。
+
 
 ====================
 
@@ -262,7 +262,11 @@ async def ask_bosmin_ai(
 
                 response = await client.aio.models.generate_content(
                     model="gemini-3.5-flash",
-                    contents=prompt
+                    contents=prompt,
+                    config={
+                        max_output_tokens=30,
+                        temperature=0.8
+                    }
                 )
 
                 if response.text:
@@ -388,7 +392,7 @@ async def on_message(message):
 
                 history = []
 
-                async for msg in message.channel.history(limit=10):
+                async for msg in message.channel.history(limit=3):
 
                     if msg.author.bot:
                         continue
