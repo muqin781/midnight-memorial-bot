@@ -261,7 +261,7 @@ async def ask_bosmin_ai(
 博士敏怎麼回？
 """
 
-    try:
+try:
 
     for attempt in range(2):
 
