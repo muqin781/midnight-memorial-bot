@@ -7,6 +7,7 @@ import random
 import datetime
 from google import genai
 import time
+import asyncio
 
 
 
@@ -262,21 +263,38 @@ async def ask_bosmin_ai(
 
     try:
 
-        response = await client.aio.models.generate_content(
-            model="gemini-3.5-flash",
-            contents=prompt
-        )
+    for attempt in range(2):
 
-        print("🤖 Gemini 已回覆")
+        try:
 
+            response = await client.aio.models.generate_content(
+                model="gemini-3.5-flash",
+                contents=prompt
+            )
 
-        return response.text.strip()
+            if response.text:
 
-    except Exception as e:
+                print("🤖 Gemini 已回覆")
 
-        print("❌ Gemini 回覆失敗：", e)
+                return response.text.strip()
 
-        return None
+        except Exception as e:
+
+            print(
+                f"❌ Gemini 第 {attempt + 1} 次失敗：",
+                e
+            )
+
+            if attempt == 0:
+                await asyncio.sleep(1)
+
+    return None
+
+except Exception as e:
+
+    print("❌ Gemini 最終失敗：", e)
+
+    return None
 
 # ======================
 # 日期解析
@@ -366,15 +384,12 @@ async def on_message(message):
     if "博士敏" in text or "bosmin" in text:
 
         now = time.time()
-
         guild_id = message.guild.id
-
         last = bosmin_last_reply.get(guild_id, 0)
 
         if now - last >= 3:
 
             bosmin_last_reply[guild_id] = now
-
             quotes = load_bosmin(guild_id)
 
             if AI_MODE:
@@ -391,7 +406,6 @@ async def on_message(message):
                     )
 
                 history.reverse()
-
                 recent_chat = "\n".join(history)
 
                 ai_reply = await ask_bosmin_ai(
@@ -400,25 +414,29 @@ async def on_message(message):
                     message.content
                 )
 
-                if ai_reply:
-
-                    await message.reply(
-                        ai_reply,
-                        mention_author=False
-                    )
-
-                else:
-
-                    await message.reply(
-                        random.choice(quotes),
-                        mention_author=False
-                    )
+                reply_text = (
+                    ai_reply
+                    if ai_reply
+                    else random.choice(quotes)
+                )
 
             else:
 
+                reply_text = random.choice(quotes)
+
+            try:
+
                 await message.reply(
-                    random.choice(quotes),
+                    reply_text,
                     mention_author=False
+                )
+
+            except discord.HTTPException as e:
+
+                print("⚠️ Reply 失敗，改用普通訊息：", e)
+
+                await message.channel.send(
+                    reply_text
                 )
 
     await bot.process_commands(message)
