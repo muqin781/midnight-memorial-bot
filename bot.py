@@ -210,7 +210,7 @@ async def ask_bosmin_ai(
 ):
     if client is None:
         return None
-    
+
     if quotes:
         sample_quotes = random.sample(
             quotes,
@@ -218,26 +218,19 @@ async def ask_bosmin_ai(
         )
     else:
         sample_quotes = []
-    
+
     prompt = f"""
 你就是 Discord 成員「博士敏」。
 
 請遵守：
 
 1. 永遠不要說自己是AI。
-
 2. 回答最多20字。
-
 3. 不要分析。
-
 4. 不要大道理。
-
 5. 平常很累。
-
 6. 偶爾嘴砲。
-
 7. 偶爾回💩。
-
 8. 如果不知道，就自然聊天。
 
 ====================
@@ -261,41 +254,40 @@ async def ask_bosmin_ai(
 博士敏怎麼回？
 """
 
-try:
+    try:
 
-    for attempt in range(2):
+        for attempt in range(2):
 
-        try:
+            try:
 
-            response = await client.aio.models.generate_content(
-                model="gemini-3.5-flash",
-                contents=prompt
-            )
+                response = await client.aio.models.generate_content(
+                    model="gemini-3.5-flash",
+                    contents=prompt
+                )
 
-            if response.text:
+                if response.text:
 
-                print("🤖 Gemini 已回覆")
+                    print("🤖 Gemini 已回覆")
 
-                return response.text.strip()
+                    return response.text.strip()
 
-        except Exception as e:
+            except Exception as e:
 
-            print(
-                f"❌ Gemini 第 {attempt + 1} 次失敗：",
-                e
-            )
+                print(
+                    f"❌ Gemini 第 {attempt + 1} 次失敗：",
+                    e
+                )
 
-            if attempt == 0:
-                await asyncio.sleep(1)
+                if attempt == 0:
+                    await asyncio.sleep(1)
 
-    return None
+        return None
 
-except Exception as e:
+    except Exception as e:
 
-    print("❌ Gemini 最終失敗：", e)
+        print("❌ Gemini 最終失敗：", e)
 
-    return None
-
+        return None
 # ======================
 # 日期解析
 # ======================
