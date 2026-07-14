@@ -264,8 +264,8 @@ async def ask_bosmin_ai(
                     model="gemini-3.5-flash",
                     contents=prompt,
                     config={
-                        max_output_tokens=30,
-                        temperature=0.8
+                        "max_output_tokens": 30,
+                        "temperature": 0.8
                     }
                 )
 
