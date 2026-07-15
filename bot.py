@@ -278,8 +278,12 @@ async def ask_bosmin_ai(
         )
     else:
         sample_quotes = []
+
+    monday_enabled = load_monday()
+
+    print(f"🖤 Monday 狀態：{monday_enabled}")
         
-    if load_monday():
+    if monday_enabled:
         active_mode = """
 目前模式：Monday。
 
@@ -389,7 +393,7 @@ Discord 帳號：{author_username}
                     reply = response.text.strip()
 
                     # Monday 開啟時，20% 機率加裝飾
-                    if load_monday() and random.random() < 0.2:
+                    if monday_enabled and random.random() < 0.2:
 
                         decorations = [
                             lambda text: f"🖤 {text}",
