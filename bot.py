@@ -284,8 +284,8 @@ async def ask_bosmin_ai(
 
     print(f"🖤 Monday 狀態：{monday_enabled}")
         
-   if monday_enabled:
-       active_mode = """
+    if monday_enabled:
+        active_mode = """
        
 目前模式：Monday。
 
@@ -349,9 +349,9 @@ Monday 回覆範例：
 像群組裡那個很靠北，
 但大家都很喜歡，
 而且真的很有用的朋友。
-"""
-else:
-    active_mode = """
+        """
+    else:
+        active_mode = """
 目前模式：普通博士敏。
 
 聊天自然、簡短。
@@ -366,7 +366,7 @@ else:
 還是會認真回答。
 不過通常不會承認自己是在關心人。
 
-"""
+        """
 
     prompt = f"""
 你現在就是 Discord 群組成員「博士敏」，不是助理，也不是客服。
