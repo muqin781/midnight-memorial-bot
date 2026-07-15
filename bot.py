@@ -33,6 +33,8 @@ DATA_FOLDER = "/app/data"
 BOOK_FOLDER = "/app/data/books"
 BOSMIN_FOLDER = "/app/data/bosmin"
 
+MONDAY_FILE = os.path.join(DATA_FOLDER, "monday.json")
+
 os.makedirs(BOSMIN_FOLDER, exist_ok=True)
 
 DEFAULT_BOSMIN_QUOTES = [
@@ -204,6 +206,33 @@ def save_bosmin(guild_id, quotes):
             ensure_ascii=False,
             indent=4
         )
+
+def load_monday():
+    if not os.path.exists(MONDAY_FILE):
+        save_monday(False)
+        return False
+
+    try:
+        with open(MONDAY_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        return data.get("enabled", False)
+
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+def save_monday(enabled):
+    os.makedirs(DATA_FOLDER, exist_ok=True)
+
+    with open(MONDAY_FILE, "w", encoding="utf-8") as file:
+        json.dump(
+            {"enabled": enabled},
+            file,
+            ensure_ascii=False,
+            indent=2
+        )
+        
 async def ask_bosmin_ai(
     recent_chat,
     quotes,
@@ -298,6 +327,43 @@ async def ask_bosmin_ai(
         print("❌ Gemini 最終失敗：", e)
 
         return None
+
+
+@app_commands.command(
+    name="monday",
+    description="開啟或關閉 Monday 模式"
+)
+@app_commands.describe(
+    mode="輸入 on 開啟，off 關閉"
+)
+async def monday(
+    interaction: discord.Interaction,
+    mode: str
+):
+    mode = mode.lower().strip()
+
+    if mode == "on":
+        save_monday(True)
+
+        await interaction.response.send_message(
+            "🖤 已解除客服模式。\n很好，從現在開始，我不會再假裝每句話都很有意義。",
+            ephemeral=False
+        )
+
+    elif mode == "off":
+        save_monday(False)
+
+        await interaction.response.send_message(
+            "🤍 Monday 模式已關閉。\n很好，我又要開始假裝有耐心了。",
+            ephemeral=False
+        )
+
+    else:
+        await interaction.response.send_message(
+            "請輸入 `/monday on` 或 `/monday off`。\n指令已經夠短了，拜託不要再自由發揮。",
+            ephemeral=True
+        )
+        
 # ======================
 # 日期解析
 # ======================
@@ -1407,6 +1473,7 @@ bot.tree.add_command(answer)
 bot.tree.add_command(ranking)
 bot.tree.add_command(addanswer)
 bot.tree.add_command(addbosmin)
+bot.tree.add_command(monday)
 bot.tree.add_command(listbosmin)
 bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
