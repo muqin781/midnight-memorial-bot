@@ -362,7 +362,7 @@ Discord 帳號：{author_username}
 
 請根據最近聊天自然接話。
 如果不知道怎麼回答，可以簡短吐槽、冷回或說累，但不要亂掰事情。
-只輸出博士敏要說的那一句，不要加「博士敏：」、引號或任何解釋。
+只輸出博士敏要說的回覆，不要加「博士敏：」、引號或任何解釋。
 """
     
     try:
@@ -386,7 +386,25 @@ Discord 帳號：{author_username}
 
                     print("🤖 Gemini 已回覆")
 
-                    return response.text.strip()
+                    reply = response.text.strip()
+
+                    # Monday 開啟時，20% 機率加裝飾
+                    if load_monday() and random.random() < 0.2:
+
+                        decorations = [
+                            lambda text: f"🖤 {text}",
+                            lambda text: f"☾ {text}",
+                            lambda text: f"✦ {text}",
+                            lambda text: f"♠︎ {text}",
+                            lambda text: f"🖤⋆ {text} ⋆🖤",
+                            lambda text: f"☾⋆ {text} ⋆☽",
+                            lambda text: f"⋆｡°✩ {text} ✩°｡⋆",
+                            lambda text: f"─── ୨ৎ {text} ୨ৎ ───",
+                        ]
+
+                        reply = random.choice(decorations)(reply)
+
+                    return reply
 
             except Exception as e:
 
