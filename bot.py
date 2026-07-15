@@ -14,7 +14,6 @@ from google.genai import types
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-bosmin_ai_mode = {}
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -34,6 +33,8 @@ BOOK_FOLDER = "/app/data/books"
 BOSMIN_FOLDER = "/app/data/bosmin"
 
 MONDAY_FILE = os.path.join(DATA_FOLDER, "monday.json")
+
+BOSMIN_AI_FILE = os.path.join(DATA_FOLDER, "bosmin_ai.json")
 
 os.makedirs(BOSMIN_FOLDER, exist_ok=True)
 
@@ -226,6 +227,32 @@ def save_monday(enabled):
     os.makedirs(DATA_FOLDER, exist_ok=True)
 
     with open(MONDAY_FILE, "w", encoding="utf-8") as file:
+        json.dump(
+            {"enabled": enabled},
+            file,
+            ensure_ascii=False,
+            indent=2
+        )
+
+def load_bosmin_ai():
+    if not os.path.exists(BOSMIN_AI_FILE):
+        save_bosmin_ai(True)
+        return True
+
+    try:
+        with open(BOSMIN_AI_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        return data.get("enabled", True)
+
+    except (json.JSONDecodeError, OSError):
+        return True
+
+
+def save_bosmin_ai(enabled):
+    os.makedirs(DATA_FOLDER, exist_ok=True)
+
+    with open(BOSMIN_AI_FILE, "w", encoding="utf-8") as file:
         json.dump(
             {"enabled": enabled},
             file,
@@ -460,7 +487,7 @@ async def on_message(message):
             bosmin_last_reply[guild_id] = now
             quotes = load_bosmin(guild_id)
 
-            if bosmin_ai_mode.get(guild_id, True):
+            if load_bosmin_ai():
 
                 history = []
 
@@ -888,9 +915,7 @@ async def bosminai(
     enabled: bool
 ):
 
-    bosmin_ai_mode[
-        interaction.guild.id
-    ] = enabled
+    save_bosmin_ai(enabled)
 
     if enabled:
 
