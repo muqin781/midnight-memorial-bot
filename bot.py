@@ -321,7 +321,7 @@ async def ask_bosmin_ai(
             try:
 
                 response = await client.aio.models.generate_content(
-                    model="gemini-3.5-flash",
+                    model="gemini-3.1-flash-lite",
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         max_output_tokens=100,
@@ -474,67 +474,144 @@ async def on_message(message):
     if message.guild is None:
         return
 
-    text = message.content.lower()
+    text = message.content.lower().strip()
+    guild_id = message.guild.id
 
-    if "博士敏" in text or "bosmin" in text:
+    # 判斷是不是直接回覆博士敏 Bot
+    reply_to_bot = False
 
-        now = time.time()
-        guild_id = message.guild.id
-        last = bosmin_last_reply.get(guild_id, 0)
+    if message.reference:
+        referenced_message = message.reference.resolved
 
-        if now - last >= 3:
+        if isinstance(referenced_message, discord.Message):
+            if referenced_message.author.id == bot.user.id:
+                reply_to_bot = True
 
-            bosmin_last_reply[guild_id] = now
-            quotes = load_bosmin(guild_id)
+    # 訊息內是否提到博士敏
+    mentioned_bosmin = (
+        "博士敏" in text
+        or "bosmin" in text
+    )
 
-            if load_bosmin_ai():
+    # 沒提博士敏，也不是回覆 Bot，就不處理
+    if not mentioned_bosmin and not reply_to_bot:
+        await bot.process_commands(message)
+        return
 
-                history = []
+    # 3 秒基本冷卻
+    now = time.time()
+    last = bosmin_last_reply.get(guild_id, 0)
 
-                async for msg in message.channel.history(limit=3):
+    if now - last < 3:
+        await bot.process_commands(message)
+        return
 
-                    if msg.author.bot:
-                        continue
+    bosmin_last_reply[guild_id] = now
 
-                    history.append(
-                        f"{msg.author.display_name}：{msg.content}"
-                    )
+    quotes = load_bosmin(guild_id)
 
-                history.reverse()
-                recent_chat = "\n".join(history)
+    # 判斷是不是直接問博士敏
+    question_words = [
+        "嗎",
+        "呢",
+        "為什麼",
+        "怎麼",
+        "如何",
+        "是不是",
+        "可以",
+        "能不能",
+        "要不要",
+        "覺得",
+        "什麼",
+        "哪個",
+        "誰",
+        "？",
+        "?"
+    ]
 
-                async with message.channel.typing():
+    directly_asking = (
+        mentioned_bosmin
+        and any(word in text for word in question_words)
+    )
 
-                    ai_reply = await ask_bosmin_ai(
-                        recent_chat,
-                        quotes,
-                        message.content
-                     )
+    # 決定 AI 機率
+    if reply_to_bot:
+        ai_chance = 0.5
 
-                reply_text = (
-                    ai_reply
-                    if ai_reply
-                    else random.choice(quotes)
-                )
+    elif directly_asking:
+        ai_chance = 0.5
 
-            else:
+    else:
+        ai_chance = 0.2
 
-                reply_text = random.choice(quotes)
+    # AI 是否啟用，以及這次有沒有抽中
+    use_ai = (
+        load_bosmin_ai()
+        and random.random() < ai_chance
+    )
 
-            try:
+    if use_ai:
 
-                await message.reply(
-                    reply_text,
-                    mention_author=False
-                )
+        history = []
 
-            except discord.HTTPException as e:
+        async for msg in message.channel.history(limit=3):
 
-                print("⚠️ Reply 失敗，改用普通訊息：", e)
+            if msg.author.bot:
+                continue
 
-                await message.channel.send(
-                    reply_text
-                )
+            history.append(
+                f"{msg.author.display_name}：{msg.content}"
+            )
+
+        history.reverse()
+        recent_chat = "\n".join(history)
+
+        async with message.channel.typing():
+
+            ai_reply = await ask_bosmin_ai(
+                recent_chat,
+                quotes,
+                message.content
+            )
+
+        if ai_reply:
+            reply_text = ai_reply
+
+            print(
+                f"🤖 本次使用 Gemini，"
+                f"AI 機率：{int(ai_chance * 100)}%"
+            )
+
+        else:
+            reply_text = random.choice(quotes)
+            print("📖 Gemini 失敗，改用語錄")
+
+    else:
+
+        reply_text = random.choice(quotes)
+
+        print(
+            f"📖 本次使用語錄，"
+            f"AI 機率：{int(ai_chance * 100)}%"
+        )
+
+    try:
+
+        await message.reply(
+            reply_text,
+            mention_author=False
+        )
+
+    except discord.HTTPException as e:
+
+        print(
+            "⚠️ Reply 失敗，改用普通訊息：",
+            e
+        )
+
+        await message.channel.send(
+            reply_text
+        )
 
     await bot.process_commands(message)
 
