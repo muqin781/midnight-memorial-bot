@@ -492,15 +492,6 @@ async def on_message(message):
     text = message.content.lower().strip()
     guild_id = message.guild.id
 
-    # 判斷是不是直接回覆博士敏 Bot
-    reply_to_bot = False
-
-    if message.reference:
-        referenced_message = message.reference.resolved
-
-        if isinstance(referenced_message, discord.Message):
-            if referenced_message.author.id == bot.user.id:
-                reply_to_bot = True
 
     # 訊息內是否提到博士敏
     mentioned_bosmin = (
@@ -509,7 +500,7 @@ async def on_message(message):
     )
 
     # 沒提博士敏，也不是回覆 Bot，就不處理
-    if not mentioned_bosmin and not reply_to_bot:
+    if not mentioned_bosmin:
         await bot.process_commands(message)
         return
 
@@ -550,12 +541,8 @@ async def on_message(message):
     )
 
     # 決定 AI 機率
-    if reply_to_bot:
+    if directly_asking:
         ai_chance = 0.5
-
-    elif directly_asking:
-        ai_chance = 0.5
-
     else:
         ai_chance = 0.2
 
