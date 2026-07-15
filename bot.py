@@ -489,7 +489,27 @@ async def monday(
             "請輸入 `/monday on` 或 `/monday off`。\n指令已經夠短了，拜託不要再自由發揮。",
             ephemeral=True
         )
-        
+
+@app_commands.command(
+    name="bosminstatus",
+    description="查看博士敏 AI 與 Monday 模式狀態"
+)
+async def bosminstatus(
+    interaction: discord.Interaction
+):
+    ai_enabled = load_bosmin_ai()
+    monday_enabled = load_monday()
+
+    ai_status = "🟢 已開啟" if ai_enabled else "🔴 已關閉"
+    monday_status = "🟢 已開啟" if monday_enabled else "🔴 已關閉"
+
+    await interaction.response.send_message(
+        f"🤖 博士敏 AI：{ai_status}\n"
+        f"🖤 Monday 模式：{monday_status}",
+        ephemeral=True
+    )
+
+
 # ======================
 # 日期解析
 # ======================
@@ -1666,6 +1686,7 @@ bot.tree.add_command(addanswer)
 bot.tree.add_command(addbosmin)
 bot.tree.add_command(bosminai)
 bot.tree.add_command(monday)
+bot.tree.add_command(bosminstatus)
 bot.tree.add_command(listbosmin)
 bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
