@@ -8,6 +8,7 @@ import datetime
 from google import genai
 import time
 import asyncio
+from google.genai import types
 
 
 
@@ -263,10 +264,12 @@ async def ask_bosmin_ai(
                 response = await client.aio.models.generate_content(
                     model="gemini-3.5-flash",
                     contents=prompt,
-                    config={
-                        "max_output_tokens": 30,
-                        "temperature": 0.8
-                    }
+                    config=types.GenerateContentConfig(
+                        max_output_tokens=100,
+                        thinking_config=types.ThinkingConfig(
+                        thinking_level="minimal"
+                        )
+                    )
                 )
 
                 if response.text:
