@@ -443,7 +443,7 @@ async def monday(
 
         await interaction.response.send_message(
             "🖤 已解除客服模式。\n很好，從現在開始，我不會再假裝每句話都很有意義。",
-            ephemeral=False
+            ephemeral=True
         )
 
     elif mode == "off":
@@ -451,7 +451,7 @@ async def monday(
 
         await interaction.response.send_message(
             "🤍 Monday 模式已關閉。\n很好，我又要開始假裝有耐心了。",
-            ephemeral=False
+            ephemeral=True
         )
 
     else:
