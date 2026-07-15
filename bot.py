@@ -13,7 +13,7 @@ import asyncio
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-AI_MODE = True
+bosmin_ai_mode = {}
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -388,7 +388,7 @@ async def on_message(message):
             bosmin_last_reply[guild_id] = now
             quotes = load_bosmin(guild_id)
 
-            if AI_MODE:
+            if bosmin_ai_mode.get(guild_id, True):
 
                 history = []
 
@@ -404,11 +404,13 @@ async def on_message(message):
                 history.reverse()
                 recent_chat = "\n".join(history)
 
-                ai_reply = await ask_bosmin_ai(
-                    recent_chat,
-                    quotes,
-                    message.content
-                )
+                async with message.channel.typing():
+
+                    ai_reply = await ask_bosmin_ai(
+                        recent_chat,
+                        quotes,
+                        message.content
+                     )
 
                 reply_text = (
                     ai_reply
@@ -795,6 +797,42 @@ async def addbosmin(
         f"目前共有 {len(quotes)} 句。",
         ephemeral=True
     )
+
+# ======================
+# bosminai
+# ======================
+
+@app_commands.command(
+    name="bosminai",
+    description="開啟或關閉博士敏 AI"
+)
+
+@app_commands.describe(
+    enabled="開啟選 True，關閉選 False"
+)
+
+async def bosminai(
+    interaction: discord.Interaction,
+    enabled: bool
+):
+
+    bosmin_ai_mode[
+        interaction.guild.id
+    ] = enabled
+
+    if enabled:
+
+        await interaction.response.send_message(
+            "🤖 博士敏 微微微AI 已開啟。",
+            ephemeral=True
+        )
+
+    else:
+
+        await interaction.response.send_message(
+            "📖 博士敏已切換為語錄模式。",
+            ephemeral=True
+        )
 
 # ======================
 # listbosmin
@@ -1330,11 +1368,15 @@ async def help_command(
 
 /ranking 紀念排行榜
 
+🤖 博士敏
+
+/bosminai 開啟或關閉博士敏 AI
+
 /addbosmin 新增博士敏語錄
 
 /listbosmin 查看博士敏語錄清單
 
-/removebosmin依編號刪除博士敏語錄
+/removebosmin 依編號刪除博士敏語錄
 
 📖 解答之書
 
@@ -1358,6 +1400,7 @@ bot.tree.add_command(remove)
 bot.tree.add_command(answer)
 bot.tree.add_command(ranking)
 bot.tree.add_command(addanswer)
+bot.tree.add_command(addbosmin)
 bot.tree.add_command(addbosmin)
 bot.tree.add_command(listbosmin)
 bot.tree.add_command(removebosmin)
