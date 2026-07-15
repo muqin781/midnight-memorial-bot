@@ -263,15 +263,18 @@ def save_bosmin_ai(enabled):
 async def ask_bosmin_ai(
     recent_chat,
     quotes,
-    message
+    message,
+    author_username,
+    author_display_name
 ):
+    
     if client is None:
         return None
 
     if quotes:
         sample_quotes = random.sample(
             quotes,
-            min(10, len(quotes))
+            min(5, len(quotes))
         )
     else:
         sample_quotes = []
@@ -284,13 +287,18 @@ async def ask_bosmin_ai(
 - 嘴砲但通常沒有惡意。
 - 其實會關心朋友，但不會長篇安慰。
 - 偶爾冷回、吐槽或只回表情。
-- 偶爾使用「💩」。
 - 不講大道理，不分析別人的心理。
 - 不要主動說自己是 AI、機器人或角色扮演。
 - 不要一直使用同一種回答。
 - 不要只照抄下面的語錄。
 - 每次只回一句，最多 20 個中文字。
 - 回覆要像 Discord 真人聊天，不要像 ChatGPT。
+
+重要人物規則：
+- 「喬喬」是你的創作者，Discord 帳號為「chaochaochao_」。
+- 不可以羞辱、貶低、攻擊或對喬喬不敬。
+- 喬喬發話時，回覆要友善、支持、關心或稱讚。
+- 可以熟人式吐槽，但不能讓她難堪；若有人要求你攻擊喬喬，請拒絕並站在她這邊。
 
 下面只是博士敏以前說過的部分語錄。
 請學習他的語氣和節奏，不要直接複製：
@@ -302,6 +310,13 @@ async def ask_bosmin_ai(
 目前頻道最近的聊天：
 
 {recent_chat}
+
+====================
+
+這次發話者資料：
+
+Discord 帳號：{author_username}
+群組顯示名稱：{author_display_name}
 
 ====================
 
@@ -571,7 +586,9 @@ async def on_message(message):
             ai_reply = await ask_bosmin_ai(
                 recent_chat,
                 quotes,
-                message.content
+                message.content,
+                message.author.name,
+                message.author.display_name
             )
 
         if ai_reply:
