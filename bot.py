@@ -740,9 +740,9 @@ async def on_message(message):
 
     # 決定 AI 機率
     if directly_asking:
-        ai_chance = 0.7
+        ai_chance = 0.9
     else:
-        ai_chance = 0.5
+        ai_chance = 0.7
 
     # AI 是否啟用，以及這次有沒有抽中
     use_ai = (
