@@ -703,6 +703,10 @@ async def on_message(message):
     text = message.content.lower().strip()
     guild_id = message.guild.id
 
+    global rate_limited
+
+    
+
 
     # 訊息內是否提到博士敏
     mentioned_bosmin = (
@@ -800,46 +804,37 @@ async def on_message(message):
             f"📖 本次使用語錄，"
             f"AI 機率：{int(ai_chance * 100)}%"
         )
-
-   try:
-       await message.reply(
-           reply_text,
-           mention_author=False
-       )
-       # 成功送出，解除限流狀態
-       global rate_limited
-       rate_limited = False
-
-   except discord.HTTPException as e:
-
-       global rate_limited
-
-       if e.status == 429:
-
-           print("🚫 Discord API Rate Limit")
-
-           if not rate_limited:
-
-               rate_limited = True
-
-               retry = getattr(e, "retry_after", 5)
-
-            await asyncio.sleep(retry)
+    try:
+        await message.reply(
+            reply_text,
+            mention_author=False
+        )
+        if rate_limited:
+            rate_limited = False
 
             try:
                 await message.channel.send(
-                    "⚠️ 博士敏剛剛講太多，被 Discord 叫去冷靜一下。\n請等我一下，我等等回來。"
+               "🖤 我剛剛被 Discord 抓去冷靜一下，現在回來了。"
                 )
             except:
                 pass
 
-        return
-               except:
-                   pass
+    except discord.HTTPException as e:
 
-           return
+        
 
-       print("⚠️ Reply 失敗：", e)
+        if e.status == 429:
+
+            print("🚫 Discord API Rate Limit")
+
+            if not rate_limited:
+
+                rate_limited = True
+
+            return
+
+        print("⚠️ Reply 失敗：", e)
+    
 
     await bot.process_commands(message)
 
