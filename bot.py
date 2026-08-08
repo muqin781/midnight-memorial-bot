@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import json
+from collections import deque
 import os
 import random
 import datetime
