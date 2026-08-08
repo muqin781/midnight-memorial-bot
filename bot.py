@@ -11,6 +11,10 @@ import asyncio
 from google.genai import types
 
 
+chat_cache = {}
+rate_limited = False
+
+
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -683,6 +687,15 @@ async def on_message(message):
 
     if message.author.bot:
         return
+    channel_id = message.channel.id
+
+    if channel_id not in chat_cache:
+        chat_cache[channel_id] = deque(maxlen=5)
+
+    chat_cache[channel_id].append(
+        f"{message.author.display_name}：{message.content}"
+    )
+    
 
     if message.guild is None:
         return
@@ -752,18 +765,8 @@ async def on_message(message):
 
     if use_ai:
 
-        history = []
-
-        async for msg in message.channel.history(limit=3):
-
-            if msg.author.bot:
-                continue
-
-            history.append(
-                f"{msg.author.display_name}：{msg.content}"
-            )
-
-        history.reverse()
+        history = list(chat_cache.get(message.channel.id, []))
+        
         recent_chat = "\n".join(history)
 
         async with message.channel.typing():
@@ -798,23 +801,45 @@ async def on_message(message):
             f"AI 機率：{int(ai_chance * 100)}%"
         )
 
-    try:
+   try:
+       await message.reply(
+           reply_text,
+           mention_author=False
+       )
+       # 成功送出，解除限流狀態
+       global rate_limited
+       rate_limited = False
 
-        await message.reply(
-            reply_text,
-            mention_author=False
-        )
+   except discord.HTTPException as e:
 
-    except discord.HTTPException as e:
+       global rate_limited
 
-        print(
-            "⚠️ Reply 失敗，改用普通訊息：",
-            e
-        )
+       if e.status == 429:
 
-        await message.channel.send(
-            reply_text
-        )
+           print("🚫 Discord API Rate Limit")
+
+           if not rate_limited:
+
+               rate_limited = True
+
+               retry = getattr(e, "retry_after", 5)
+
+            await asyncio.sleep(retry)
+
+            try:
+                await message.channel.send(
+                    "⚠️ 博士敏剛剛講太多，被 Discord 叫去冷靜一下。\n請等我一下，我等等回來。"
+                )
+            except:
+                pass
+
+        return
+               except:
+                   pass
+
+           return
+
+       print("⚠️ Reply 失敗：", e)
 
     await bot.process_commands(message)
 
