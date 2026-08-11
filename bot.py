@@ -930,7 +930,7 @@ async def announce(interaction: discord.Interaction, content: str):
         )
         return
 
-    await interaction.channel.send(f"📢 **博士敏公告**\n{content}")
+    await interaction.channel.send(f"（⁎⁍̴̛ᴗ⁍̴̛⁎） {content}")
     await interaction.response.send_message("✅ 公告已發布。", ephemeral=True)
 # ======================
 # remember
