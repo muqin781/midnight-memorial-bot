@@ -12,7 +12,7 @@ import asyncio
 from google.genai import types
 from discord import app_commands
 
-OWNER_ID = 1536204682702229514
+OWNER_ID = 860871569043619870
 
 
 chat_cache = {}
@@ -923,7 +923,7 @@ async def goodbye(
 @app_commands.describe(content="公告內容")
 async def announce(interaction: discord.Interaction, content: str):
 
-    if interaction.user.id != 1536204682702229514:
+    if interaction.user.id != 860871569043619870:
         await interaction.response.send_message(
             "❌ 你不是喬喬，你要幹嘛。",
             ephemeral=True
