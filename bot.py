@@ -925,7 +925,7 @@ async def announce(interaction: discord.Interaction, content: str):
 
     if interaction.user.id != 1536204682702229514:
         await interaction.response.send_message(
-            "❌ 只有博士敏的創作者可以使用。",
+            "❌ 你不是喬喬，你要幹嘛。",
             ephemeral=True
         )
         return
