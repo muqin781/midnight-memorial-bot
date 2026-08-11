@@ -10,6 +10,9 @@ from google import genai
 import time
 import asyncio
 from google.genai import types
+from discord import app_commands
+
+OWNER_ID = 1536204682702229514
 
 
 chat_cache = {}
@@ -916,7 +919,19 @@ async def goodbye(
         )
 
 
+@bot.tree.command(name="announce", description="發布博士敏公告")
+@app_commands.describe(content="公告內容")
+async def announce(interaction: discord.Interaction, content: str):
 
+    if interaction.user.id != 1536204682702229514:
+        await interaction.response.send_message(
+            "❌ 只有博士敏的創作者可以使用。",
+            ephemeral=True
+        )
+        return
+
+    await interaction.channel.send(f"📢 **博士敏公告**\n{content}")
+    await interaction.response.send_message("✅ 公告已發布。", ephemeral=True)
 # ======================
 # remember
 # ======================
@@ -1776,6 +1791,8 @@ async def help_command(
 
 /removebosmin 依編號刪除博士敏語錄
 
+/announce
+
 📖 解答之書
 
 /answer 翻開書本尋找答案
@@ -1806,6 +1823,7 @@ bot.tree.add_command(listbosmin)
 bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
+bot.tree.add_command(announce)
 
 
 # ======================
