@@ -1823,7 +1823,6 @@ bot.tree.add_command(listbosmin)
 bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
-bot.tree.add_command(announce)
 
 
 # ======================
