@@ -1824,6 +1824,331 @@ bot.tree.add_command(removebosmin)
 bot.tree.add_command(list_people)
 bot.tree.add_command(help_command)
 
+# ======================
+# 🎃 南瓜提醒器 START
+# ======================
+
+from zoneinfo import ZoneInfo
+
+PUMPKIN_FILE = os.path.join(DATA_FOLDER, "pumpkin.json")
+PUMPKIN_TZ = ZoneInfo("Asia/Taipei")
+PUMPKIN_END = datetime.date(2026, 11, 17)
+PUMPKIN_LIMIT = 30
+
+
+def pumpkin_load():
+    if not os.path.exists(PUMPKIN_FILE):
+        return {
+            "subscribers": [],
+            "completed": {},
+            "sent": {}
+        }
+
+    try:
+        with open(PUMPKIN_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        data.setdefault("subscribers", [])
+        data.setdefault("completed", {})
+        data.setdefault("sent", {})
+        return data
+
+    except (OSError, json.JSONDecodeError):
+        print("🎃 南瓜資料讀取失敗")
+        return None
+
+
+def pumpkin_save(data):
+    os.makedirs(DATA_FOLDER, exist_ok=True)
+
+    temp_file = PUMPKIN_FILE + ".tmp"
+
+    with open(temp_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    os.replace(temp_file, PUMPKIN_FILE)
+
+
+def pumpkin_today():
+    return datetime.datetime.now(PUMPKIN_TZ).date()
+
+
+def pumpkin_active():
+    return pumpkin_today() <= PUMPKIN_END
+
+
+class PumpkinButtons(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        label="🎃 打完了",
+        style=discord.ButtonStyle.success,
+        custom_id="pumpkin_done_2026"
+    )
+    async def done(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        data = pumpkin_load()
+
+        if data is None:
+            await interaction.followup.send(
+                "資料讀取失敗，請稍後再試。",
+                ephemeral=True
+            )
+            return
+
+        user_id = str(interaction.user.id)
+        today = pumpkin_today().isoformat()
+
+        if user_id not in data["subscribers"]:
+            await interaction.followup.send(
+                "🎃 你目前沒有訂閱南瓜提醒。",
+                ephemeral=True
+            )
+            return
+
+        data["completed"][user_id] = today
+        pumpkin_save(data)
+
+        await interaction.followup.send(
+            "🎃 今天南瓜打完啦！23:20 不會再煩你了。",
+            ephemeral=True
+        )
+
+    @discord.ui.button(
+        label="🔔 繼續提醒",
+        style=discord.ButtonStyle.secondary,
+        custom_id="pumpkin_continue_2026"
+    )
+    async def keep_reminding(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
+        await interaction.response.send_message(
+            "🔔 好，23:20 還沒完成的話，我會再提醒你。",
+            ephemeral=True
+        )
+
+
+pumpkin_group = app_commands.Group(
+    name="pumpkin",
+    description="🎃 南瓜提醒器"
+)
+
+
+@pumpkin_group.command(
+    name="join",
+    description="訂閱每日南瓜私訊提醒"
+)
+async def pumpkin_join(interaction: discord.Interaction):
+    if not pumpkin_active():
+        await interaction.response.send_message(
+            "🎃 南瓜活動已經結束了。",
+            ephemeral=True
+        )
+        return
+
+    data = pumpkin_load()
+
+    if data is None:
+        await interaction.response.send_message(
+            "❌ 資料讀取失敗，請稍後再試。",
+            ephemeral=True
+        )
+        return
+
+    user_id = str(interaction.user.id)
+
+    if user_id in data["subscribers"]:
+        await interaction.response.send_message(
+            "🎃 你已經訂閱過啦！不用重複報名。",
+            ephemeral=True
+        )
+        return
+
+    if len(data["subscribers"]) >= PUMPKIN_LIMIT:
+        await interaction.response.send_message(
+            "🎃 南瓜提醒名額已滿（30 人）。",
+            ephemeral=True
+        )
+        return
+
+    try:
+        await interaction.user.send(
+            "🎃 南瓜提醒器測試成功！\n"
+            "以後每天 20:20、23:20 會在這裡提醒你。"
+        )
+
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "❌ 博士敏無法私訊你！請先開啟 Discord 私訊權限。",
+            ephemeral=True
+        )
+        return
+
+    except discord.HTTPException:
+        await interaction.response.send_message(
+            "❌ 私訊暫時失敗，請稍後再試。",
+            ephemeral=True
+        )
+        return
+
+    data["subscribers"].append(user_id)
+    pumpkin_save(data)
+
+    await interaction.response.send_message(
+        f"🎃 訂閱成功！目前 {len(data['subscribers'])}/30 人。\n"
+        "每天 20:20、23:20 私訊提醒你。",
+        ephemeral=True
+    )
+
+
+@pumpkin_group.command(
+    name="leave",
+    description="取消南瓜私訊提醒"
+)
+async def pumpkin_leave(interaction: discord.Interaction):
+    data = pumpkin_load()
+
+    if data is None:
+        await interaction.response.send_message(
+            "❌ 資料讀取失敗，請稍後再試。",
+            ephemeral=True
+        )
+        return
+
+    user_id = str(interaction.user.id)
+
+    if user_id not in data["subscribers"]:
+        await interaction.response.send_message(
+            "🎃 你本來就沒有訂閱喔。",
+            ephemeral=True
+        )
+        return
+
+    data["subscribers"].remove(user_id)
+    data["completed"].pop(user_id, None)
+    pumpkin_save(data)
+
+    await interaction.response.send_message(
+        "🎃 已取消訂閱，以後不會再收到南瓜提醒。",
+        ephemeral=True
+    )
+
+
+bot.tree.add_command(pumpkin_group)
+
+
+async def pumpkin_reminder_loop():
+    await bot.wait_until_ready()
+
+    while not bot.is_closed():
+        try:
+            now = datetime.datetime.now(PUMPKIN_TZ)
+            today = now.date()
+
+            if today > PUMPKIN_END:
+                await asyncio.sleep(60)
+                continue
+
+            slot = now.strftime("%H:%M")
+
+            if slot not in ("20:20", "23:20"):
+                await asyncio.sleep(15)
+                continue
+
+            data = pumpkin_load()
+
+            if data is None:
+                await asyncio.sleep(30)
+                continue
+
+            today_key = today.isoformat()
+            slot_key = f"{today_key}_{slot}"
+
+            sent = data["sent"].setdefault(slot_key, [])
+
+            for user_id in list(data["subscribers"]):
+                if user_id in sent:
+                    continue
+
+                if data["completed"].get(user_id) == today_key:
+                    continue
+
+                # 先記錄，避免重啟後重複發送
+                sent.append(user_id)
+                pumpkin_save(data)
+
+                try:
+                    user = await bot.fetch_user(int(user_id))
+
+                    if slot == "20:20":
+                        message = (
+                            "🎃 南瓜時間到了！\n\n"
+                            "現在晚上 8:20，快去打南瓜！\n"
+                            "打完記得按下面的按鈕。"
+                        )
+                    else:
+                        message = (
+                            "🎃 11:20 了！\n\n"
+                            "你今天的南瓜還沒回報完成喔。\n"
+                            "快去打南瓜！"
+                        )
+
+                    await user.send(
+                        message,
+                        view=PumpkinButtons()
+                    )
+
+                    print(f"🎃 已提醒 {user_id}：{slot}")
+
+                except discord.Forbidden:
+                    print(f"🎃 {user_id} 關閉私訊")
+
+                except discord.HTTPException as e:
+                    print(f"🎃 私訊失敗 {user_id}：{e}")
+
+                except Exception as e:
+                    print(f"🎃 提醒錯誤 {user_id}：{e}")
+
+                await asyncio.sleep(2)
+
+        except Exception as e:
+            print("🎃 南瓜排程錯誤：", e)
+
+        await asyncio.sleep(15)
+
+
+pumpkin_task = None
+
+pumpkin_view_registered = False
+
+@bot.listen("on_ready")
+async def pumpkin_on_ready():
+    global pumpkin_task, pumpkin_view_registered
+
+    if not pumpkin_view_registered:
+        bot.add_view(PumpkinButtons())
+        pumpkin_view_registered = True
+
+    if pumpkin_task is None or pumpkin_task.done():
+        pumpkin_task = asyncio.create_task(
+            pumpkin_reminder_loop()
+        )
+
+    print("🎃 南瓜提醒器已啟動（台灣時間）")
+
+
+# ======================
+# 🎃 南瓜提醒器 END
+# ======================
+
 
 # ======================
 # 啟動
